@@ -15,6 +15,23 @@ func NewUser(pg *database.Postgres) *User {
 }
 
 func (u *User) Create(ctx context.Context, login string, wealth int) (model.User, error) {
-	//TODO implement me
-	panic("implement me")
+	sql, args, err := u.pg.Sq.Insert("users").
+		Columns("login", "wealth").
+		Values(login, wealth).
+		Suffix("returning id").
+		ToSql()
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	var id int
+
+	err = u.pg.Pool.QueryRow(ctx, sql, args).Scan(&id)
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return model.User{Id: id, Login: login, Wealth: wealth}, nil
 }

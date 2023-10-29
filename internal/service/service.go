@@ -25,7 +25,7 @@ type Buy interface {
 }
 
 type Operation interface {
-	Create(ctx context.Context, userId, companyId int, price int, opType model.OperationType) (model.Operation, error)
+	Create(ctx context.Context, userId, companyId int, price int) (model.Operation, error)
 }
 
 type Services struct {
