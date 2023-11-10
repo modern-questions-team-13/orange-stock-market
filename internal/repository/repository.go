@@ -8,16 +8,15 @@ import (
 )
 
 type User interface {
-	Create(ctx context.Context, login string, wealth int) (model.User, error) // TODO return token for auth
-}
-
-type Company interface {
-	Create(ctx context.Context, name string) (model.Company, error)
+	Create(ctx context.Context, login string, wealth int) (id int, err error)
 }
 
 type Sale interface {
 	Create(ctx context.Context, userId, companyId int, price int) (model.Sale, error)
+	Get(ctx context.Context, id int) (model.Sale, error)
 	Delete(ctx context.Context, id int) error
+	GetSales(ctx context.Context, companyId int, maxPrice int) (id []int, err error)
+	GetAllSales(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error)
 }
 
 type Buy interface {
@@ -26,28 +25,28 @@ type Buy interface {
 }
 
 type Operation interface {
-	Create(ctx context.Context, userId, companyId int, price int, opType model.OperationType) (model.Operation, error)
+	Create(ctx context.Context, userId, companyId int, price int) (model.Operation, error)
 }
 
 type Secret interface {
-	// TODO
+	SetToken(ctx context.Context, id int) (token string, err error)
+	GetUserId(ctx context.Context, token string) (int, error)
 }
 
 type Repositories struct {
 	User
-	Company
 	Sale
 	Buy
-	Operation
-	//TODO Secret
+	//Operation
+	Secret
 }
 
 func NewRepositories(db *database.Postgres) *Repositories {
 	return &Repositories{
-		User:      pgx.NewUser(db),
-		Company:   pgx.NewCompany(db),
-		Sale:      pgx.NewSale(db),
-		Buy:       pgx.NewBuy(db),
-		Operation: pgx.NewOperation(db),
+		User: pgx.NewUser(db),
+		Sale: pgx.NewSale(db),
+		Buy:  pgx.NewBuy(db),
+		//Operation: pgx.NewOperation(db),
+		Secret: pgx.NewAuth(db),
 	}
 }

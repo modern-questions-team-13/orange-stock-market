@@ -14,7 +14,7 @@ func NewOperation(pg *database.Postgres) *Operation {
 	return &Operation{pg: pg}
 }
 
-func (o *Operation) Create(ctx context.Context, userId, companyId int, price int, opType model.OperationType) (model.Operation, error) {
+func (o *Operation) Create(ctx context.Context, userId, companyId int, price int) (model.Operation, error) {
 	//TODO implement me
 	panic("implement me")
 }
