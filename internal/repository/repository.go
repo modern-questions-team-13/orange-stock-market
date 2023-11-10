@@ -15,13 +15,16 @@ type Sale interface {
 	Create(ctx context.Context, userId, companyId int, price int) (model.Sale, error)
 	Get(ctx context.Context, id int) (model.Sale, error)
 	Delete(ctx context.Context, id int) error
-	GetSales(ctx context.Context, companyId int, maxPrice int) (id []int, err error)
+	GetSales(ctx context.Context, companyId int, maxPrice int, limit uint64) (id []int, err error)
 	GetAllSales(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error)
 }
 
 type Buy interface {
 	Create(ctx context.Context, userId, companyId int, price int) (model.Buy, error)
 	Delete(ctx context.Context, id int) error
+	Get(ctx context.Context, id int) (model.Buy, error)
+	GetBuys(ctx context.Context, companyId int, maxPrice int, limit uint64) (id []int, err error)
+	GetAllBuys(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error)
 }
 
 type Operation interface {
@@ -37,7 +40,7 @@ type Repositories struct {
 	User
 	Sale
 	Buy
-	//Operation
+	Operation
 	Secret
 }
 

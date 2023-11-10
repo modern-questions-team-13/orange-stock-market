@@ -83,10 +83,11 @@ func (s *Sale) Get(ctx context.Context, id int) (model.Sale, error) {
 
 }
 
-func (s *Sale) GetSales(ctx context.Context, companyId int, maxPrice int) (id []int, err error) {
+func (s *Sale) GetSales(ctx context.Context, companyId int, maxPrice int, limit uint64) (id []int, err error) {
 	sql, args, err := s.pg.Sq.Select("sales").
 		Columns("id").
-		Where("company_id=$ and price <= $", companyId, maxPrice).ToSql()
+		Where("company_id=$ and price <= $", companyId, maxPrice).
+		Limit(limit).ToSql()
 
 	if err != nil {
 		return nil, err
@@ -176,7 +177,7 @@ func (s *Sale) Delete(ctx context.Context, id int) error {
 	}
 
 	sql, args, err = s.pg.Sq.Update("users").
-		Set("balance", fmt.Sprintf("balance + %d", sale.Price)).
+		Set("wealth", fmt.Sprintf("wealth + %d", sale.Price)).
 		Where("id = $", sale.UserId).ToSql()
 
 	if err != nil {
@@ -186,7 +187,7 @@ func (s *Sale) Delete(ctx context.Context, id int) error {
 	res, err = tx.Exec(ctx, sql, args...)
 
 	if res.RowsAffected() == 0 {
-		return fmt.Errorf("error updateing balance for user=%d", sale.UserId)
+		return fmt.Errorf("error updating balance for user=%d", sale.UserId)
 	}
 
 	if err != nil {

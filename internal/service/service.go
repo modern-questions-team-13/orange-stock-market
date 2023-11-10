@@ -20,6 +20,7 @@ type Sale interface {
 type Buy interface {
 	Create(ctx context.Context, userId, companyId int, price int) (model.Buy, error)
 	Delete(ctx context.Context, id int) error
+	GetAllBuys(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error)
 }
 
 type Operation interface {
@@ -42,5 +43,7 @@ func NewServices(repos *repository.Repositories) *Services {
 	return &Services{
 		User: my.NewUser(repos),
 		Auth: my.NewAuth(repos),
+		Sale: my.NewSale(repos),
+		Buy:  my.NewBuy(repos),
 	}
 }
