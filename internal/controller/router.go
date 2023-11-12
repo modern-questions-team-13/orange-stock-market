@@ -12,12 +12,16 @@ type Router struct {
 func NewRouter(h *Handler) *Router {
 	router := mux.NewRouter()
 
-	//middleware := newAuthMiddleware(h)
+	middleware := newAuthMiddleware(h)
 
 	noAuthR := router.PathPrefix("/signup").Subrouter()
 	noAuthR.HandleFunc("", h.CreateUser).Methods(http.MethodPost)
 
-	//authR.Use(middleware.Middleware)
+	authR := router.PathPrefix("/api").Subrouter()
+	authR.Use(middleware.Middleware)
+
+	authR.HandleFunc("/LimitPriceBuy", h.CreateBuy).Methods(http.MethodPost)
+	authR.HandleFunc("/LimitPriceSell", h.CreateSale).Methods(http.MethodPost)
 
 	return &Router{Router: router}
 }

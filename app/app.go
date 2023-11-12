@@ -1,15 +1,16 @@
 package app
 
 import (
-	"context"
-	"fmt"
 	"github.com/modern-questions-team-13/orange-stock-market/config"
+	"github.com/modern-questions-team-13/orange-stock-market/internal/controller"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/database"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/service"
 	"github.com/modern-questions-team-13/orange-stock-market/utility/logger"
 	"github.com/rs/zerolog/log"
-	"sync"
+	oslog "log"
+	"net"
+	"net/http"
 )
 
 func Run() {
@@ -39,44 +40,15 @@ func Run() {
 	// service
 	serv := service.NewServices(repos)
 
-	var wg = sync.WaitGroup{}
+	log.Info().Msg("initiating handler...")
+	// handler
+	h := controller.NewHandler(serv)
 
-	var n = 100
+	// router
+	log.Info().Msg("initiating router")
 
-	wg.Add(n)
+	router := controller.NewRouter(h)
 
-	for i := 1; i <= n; i++ {
-		go func(i int) {
-			defer wg.Done()
-
-			if i%2 == 0 {
-				_err := serv.Buy.Create(context.Background(), 2, 1, 300)
-
-				if _err != nil {
-					fmt.Printf("buy: %s\n", _err.Error())
-				}
-			} else {
-				_err := serv.Sale.Create(context.Background(), 1, 1, 10)
-
-				if _err != nil {
-					fmt.Printf("buy: %s\n", _err.Error())
-				}
-			}
-		}(i)
-	}
-
-	wg.Wait()
-	/*
-		log.Info().Msg("initiating handler...")
-		// handler
-		h := controller.NewHandler(serv)
-
-		// router
-		log.Info().Msg("initiating router")
-
-		router := controller.NewRouter(h)
-
-		log.Info().Str("port", cfg.Port).Msg("starting listen server")
-		oslog.Fatal(http.ListenAndServe(net.JoinHostPort("", cfg.Port), router.Router))
-	*/
+	log.Info().Str("port", cfg.Port).Msg("starting listen server")
+	oslog.Fatal(http.ListenAndServe(net.JoinHostPort("", cfg.Port), router.Router))
 }
