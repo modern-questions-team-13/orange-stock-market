@@ -16,9 +16,9 @@ type Sale struct {
 }
 
 func (s *Sale) GetAllSales(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error) {
-	sql, args, err := s.pg.Sq.Select("sales").
-		Columns("price").
-		Where("company_id=$", companyId).
+	sql, args, err := s.pg.Sq.Select("price").
+		From("sales").
+		Where("company_id=?", companyId).
 		Limit(limit).Offset(offset).ToSql()
 
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *Sale) GetAllSales(ctx context.Context, companyId int, limit, offset uin
 	for rows.Next() {
 		var curPrice int
 
-		err := rows.Scan(&curPrice)
+		err = rows.Scan(&curPrice)
 
 		if err != nil {
 			return nil, err
@@ -49,9 +49,9 @@ func (s *Sale) GetAllSales(ctx context.Context, companyId int, limit, offset uin
 }
 
 func (s *Sale) Get(ctx context.Context, id int) (model.Sale, error) {
-	sql, args, err := s.pg.Sq.Select("sales").
-		Columns("user_id", "company_id", "price", "created_at").
-		Where("id = $", id).
+	sql, args, err := s.pg.Sq.Select("user_id", "company_id", "price", "created_at").
+		From("sales").
+		Where("id = ?", id).
 		ToSql()
 
 	if err != nil {
@@ -84,9 +84,9 @@ func (s *Sale) Get(ctx context.Context, id int) (model.Sale, error) {
 }
 
 func (s *Sale) GetSales(ctx context.Context, companyId int, maxPrice int, limit uint64) (id []int, err error) {
-	sql, args, err := s.pg.Sq.Select("sales").
-		Columns("id").
-		Where("company_id=$ and price <= $", companyId, maxPrice).
+	sql, args, err := s.pg.Sq.Select("id").
+		From("sales").
+		Where("company_id=? and price <= ?", companyId, maxPrice).
 		Limit(limit).ToSql()
 
 	if err != nil {
@@ -104,7 +104,7 @@ func (s *Sale) GetSales(ctx context.Context, companyId int, maxPrice int, limit 
 	for rows.Next() {
 		var curId int
 
-		err := rows.Scan(&curId)
+		err = rows.Scan(&curId)
 
 		if err != nil {
 			return nil, err
@@ -145,60 +145,28 @@ func (s *Sale) Create(ctx context.Context, userId, companyId int, price int) (mo
 	return model.Sale{Id: id, UserId: userId, CompanyId: companyId, CreatedAt: createdAt, Price: price}, nil
 }
 
-func (s *Sale) Delete(ctx context.Context, id int) error {
+func (s *Sale) Delete(ctx context.Context, id int) (model.Sale, error) {
 	sale, err := s.Get(ctx, id)
 
 	if err != nil {
-		return err
+		return model.Sale{}, err
 	}
 
-	sql, args, err := s.pg.Sq.Delete("sales").Where("id = $", id).ToSql()
+	sql, args, err := s.pg.Sq.Delete("sales").Where("id = ?", id).ToSql()
 
 	if err != nil {
-		return err
+		return model.Sale{}, err
 	}
 
-	tx, err := s.pg.Pool.Begin(ctx)
+	res, err := s.pg.Pool.Exec(ctx, sql, args...)
 
 	if err != nil {
-		return err
-	}
-
-	res, err := tx.Exec(ctx, sql, args...)
-
-	if err != nil {
-		_ = tx.Rollback(ctx)
-		return err
+		return model.Sale{}, err
 	}
 
 	if res.RowsAffected() == 0 {
-		_ = tx.Rollback(ctx)
-		return repoerrs.ErrNotExists
+		return model.Sale{}, repoerrs.ErrNotExists
 	}
 
-	sql, args, err = s.pg.Sq.Update("users").
-		Set("wealth", fmt.Sprintf("wealth + %d", sale.Price)).
-		Where("id = $", sale.UserId).ToSql()
-
-	if err != nil {
-		return err
-	}
-
-	res, err = tx.Exec(ctx, sql, args...)
-
-	if res.RowsAffected() == 0 {
-		return fmt.Errorf("error updating balance for user=%d", sale.UserId)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	err = tx.Commit(ctx)
-
-	if err != nil {
-		return fmt.Errorf("error delete sale=%d: %w", id, err)
-	}
-
-	return nil
+	return sale, nil
 }

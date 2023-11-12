@@ -13,8 +13,20 @@ type User struct {
 	pg *database.Postgres
 }
 
-func NewUser(pg *database.Postgres) *User {
-	return &User{pg: pg}
+func (u *User) Withdraw(ctx context.Context, id int, wealth int) error {
+	sql := `update users set wealth=wealth-$1 where id=$2`
+
+	_, err := u.pg.Pool.Exec(ctx, sql, wealth, id)
+
+	return err
+}
+
+func (u *User) TopUp(ctx context.Context, id int, wealth int) error {
+	sql := `update users set wealth=wealth+$1 where id=$2`
+
+	_, err := u.pg.Pool.Exec(ctx, sql, wealth, id)
+
+	return err
 }
 
 func (u *User) Create(ctx context.Context, login string, wealth int) (id int, err error) {
@@ -43,4 +55,8 @@ func (u *User) Create(ctx context.Context, login string, wealth int) (id int, er
 	}
 
 	return id, nil
+}
+
+func NewUser(pg *database.Postgres) *User {
+	return &User{pg: pg}
 }

@@ -42,7 +42,9 @@ CREATE TABLE stock_portfolios
     id         serial primary key NOT NULL,
     count      INT                NOT NULL,
     user_id    INT                NOT NULL,
-    company_id INT                NOT NULL
+    company_id INT                NOT NULL,
+    unique (user_id, company_id),
+    check (count >= 0)
 );
 
 CREATE TABLE users
@@ -50,7 +52,7 @@ CREATE TABLE users
     id     serial primary key  NOT NULL,
     login  varchar(255) unique NOT NULL,
     wealth INT                 not NULL
-    check (wealth > 0)
+    check (wealth >= 0)
 );
 
 CREATE TABLE secrets

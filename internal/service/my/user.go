@@ -9,8 +9,12 @@ type User struct {
 	repos *repository.Repositories
 }
 
-func NewUser(repos *repository.Repositories) *User {
-	return &User{repos: repos}
+func (u *User) Reserve(ctx context.Context, id int, wealth int) error {
+	return u.repos.User.Withdraw(ctx, id, wealth)
+}
+
+func (u *User) RollbackReserve(ctx context.Context, id int, wealth int) error {
+	return u.repos.User.TopUp(ctx, id, wealth)
 }
 
 func (u *User) Create(ctx context.Context, login string, wealth int) (token string, err error) {
@@ -21,4 +25,8 @@ func (u *User) Create(ctx context.Context, login string, wealth int) (token stri
 	}
 
 	return u.repos.Secret.SetToken(ctx, id)
+}
+
+func NewUser(repos *repository.Repositories) *User {
+	return &User{repos: repos}
 }

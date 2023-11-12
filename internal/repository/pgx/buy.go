@@ -16,9 +16,9 @@ type Buy struct {
 }
 
 func (b *Buy) Get(ctx context.Context, id int) (model.Buy, error) {
-	sql, args, err := b.pg.Sq.Select("buys").
-		Columns("user_id", "company_id", "price", "created_at").
-		Where("id = $", id).
+	sql, args, err := b.pg.Sq.Select("user_id", "company_id", "price", "created_at").
+		From("buys").
+		Where("id = ?", id).
 		ToSql()
 
 	if err != nil {
@@ -49,10 +49,10 @@ func (b *Buy) Get(ctx context.Context, id int) (model.Buy, error) {
 	return model.Buy{Id: id, UserId: userId, CompanyId: companyId, Price: price, CreatedAt: createdAt}, err
 }
 
-func (b *Buy) GetBuys(ctx context.Context, companyId int, maxPrice int, limit uint64) (id []int, err error) {
-	sql, args, err := b.pg.Sq.Select("buys").
-		Columns("id").
-		Where("company_id=$ and price <= $", companyId, maxPrice).
+func (b *Buy) GetBuys(ctx context.Context, companyId int, minPrice int, limit uint64) (id []int, err error) {
+	sql, args, err := b.pg.Sq.Select("id").
+		From("buys").
+		Where("company_id=? and price >= ?", companyId, minPrice).
 		Limit(limit).ToSql()
 
 	if err != nil {
@@ -70,7 +70,7 @@ func (b *Buy) GetBuys(ctx context.Context, companyId int, maxPrice int, limit ui
 	for rows.Next() {
 		var curId int
 
-		err := rows.Scan(&curId)
+		err = rows.Scan(&curId)
 
 		if err != nil {
 			return nil, err
@@ -83,9 +83,9 @@ func (b *Buy) GetBuys(ctx context.Context, companyId int, maxPrice int, limit ui
 }
 
 func (b *Buy) GetAllBuys(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error) {
-	sql, args, err := b.pg.Sq.Select("buys").
-		Columns("price").
-		Where("company_id=$", companyId).
+	sql, args, err := b.pg.Sq.Select("price").
+		From("buys").
+		Where("company_id=?", companyId).
 		Limit(limit).Offset(offset).ToSql()
 
 	if err != nil {
@@ -103,7 +103,7 @@ func (b *Buy) GetAllBuys(ctx context.Context, companyId int, limit, offset uint6
 	for rows.Next() {
 		var curPrice int
 
-		err := rows.Scan(&curPrice)
+		err = rows.Scan(&curPrice)
 
 		if err != nil {
 			return nil, err
@@ -145,60 +145,28 @@ func (b *Buy) Create(ctx context.Context, userId, companyId int, price int) (mod
 
 }
 
-func (b *Buy) Delete(ctx context.Context, id int) error {
+func (b *Buy) Delete(ctx context.Context, id int) (model.Buy, error) {
 	buy, err := b.Get(ctx, id)
 
 	if err != nil {
-		return err
+		return model.Buy{}, err
 	}
 
-	sql, args, err := b.pg.Sq.Delete("sales").Where("id = $", id).ToSql()
+	sql, args, err := b.pg.Sq.Delete("buys").Where("id = ?", id).ToSql()
 
 	if err != nil {
-		return err
+		return model.Buy{}, err
 	}
 
-	tx, err := b.pg.Pool.Begin(ctx)
+	res, err := b.pg.Pool.Exec(ctx, sql, args...)
 
 	if err != nil {
-		return err
-	}
-
-	res, err := tx.Exec(ctx, sql, args...)
-
-	if err != nil {
-		_ = tx.Rollback(ctx)
-		return err
+		return model.Buy{}, err
 	}
 
 	if res.RowsAffected() == 0 {
-		_ = tx.Rollback(ctx)
-		return repoerrs.ErrNotExists
+		return model.Buy{}, repoerrs.ErrNotExists
 	}
 
-	sql, args, err = b.pg.Sq.Update("users").
-		Set("wealth", fmt.Sprintf("wealth + %d", buy.Price)).
-		Where("id = $", buy.UserId).ToSql()
-
-	if err != nil {
-		return err
-	}
-
-	res, err = tx.Exec(ctx, sql, args...)
-
-	if res.RowsAffected() == 0 {
-		return fmt.Errorf("error updating balance for user=%d", buy.UserId)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	err = tx.Commit(ctx)
-
-	if err != nil {
-		return fmt.Errorf("error delete sale=%d: %w", id, err)
-	}
-
-	return nil
+	return buy, nil
 }

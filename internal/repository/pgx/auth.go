@@ -51,7 +51,7 @@ func (a *Auth) GetUserId(ctx context.Context, token string) (int, error) {
 	sql, args, err := a.pg.Sq.
 		Select("user_id").
 		From("secrets").
-		Where("token=$", token).
+		Where("token=?", token).
 		ToSql()
 
 	if err != nil {
