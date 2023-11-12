@@ -41,13 +41,16 @@ func NewSimpleStrategy(cfg SimpleStrategyConfig) *SimpleStrategy {
 
 func (s *SimpleStrategy) StartBot(cancelFunc context.CancelFunc) {
 	timer := time.NewTimer(s.workTime)
-	select {
-	case <-timer.C:
-		cancelFunc()
-		return
-	default:
-		s.buyAllOnce()
-		s.sellAllOnce()
+
+	for {
+		select {
+		case <-timer.C:
+			cancelFunc()
+			return
+		default:
+			s.buyAllOnce()
+			s.sellAllOnce()
+		}
 	}
 }
 
@@ -70,7 +73,7 @@ func (s *SimpleStrategy) buyAllOnce() {
 					fmt.Println(err.Error(), "Company", company.Id, "Code Error", code)
 				} else {
 					fmt.Println(code, company.Ticker, company.Id)
-					time.Sleep(time.Minute)
+					break
 				}
 			}
 			wg.Done()

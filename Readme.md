@@ -17,3 +17,8 @@ curl -X 'POST' \
 }'
 ```
 
+```curl
+curl --header "Token: ba098c25f5a8321e9940447f551b5126f244e6ed" -X 'GET' \
+  'http://localhost:9000/api/info'
+}'
+```

@@ -20,7 +20,7 @@ type Stock struct {
 
 type Symbol struct {
 	Id     int64  `json:"id"`
-	Ticker string `json:"ticker"`
+	Ticker string `json:"name"`
 }
 
 type LimitPriceBid struct {
@@ -39,8 +39,8 @@ type Account struct {
 }
 
 type Asset struct {
-	Id       int64 `json:"id"`
-	Quantity int64 `json:"Quantity"`
+	Id       int64 `json:"company_id"`
+	Quantity int64 `json:"count"`
 }
 
 type Info struct {
