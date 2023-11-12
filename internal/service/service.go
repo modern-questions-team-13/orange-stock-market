@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"github.com/modern-questions-team-13/orange-stock-market/internal/model"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/service/my"
 )
 
 type User interface {
 	Create(ctx context.Context, login string, wealth int) (token string, err error)
+	Get(ctx context.Context, id int) (model.Info, error)
 }
 
 type Sale interface {
@@ -29,12 +31,17 @@ type Auth interface {
 	GetUserId(ctx context.Context, token string) (int, bool)
 }
 
+type Company interface {
+	GetAll(ctx context.Context) ([]model.Company, error)
+}
+
 type Services struct {
 	User
 	Sale
 	Buy
 	Auth
 	Portfolio
+	Company
 }
 
 func NewServices(repos *repository.Repositories) *Services {
@@ -44,5 +51,6 @@ func NewServices(repos *repository.Repositories) *Services {
 		Sale:      my.NewSale(repos),
 		Buy:       my.NewBuy(repos),
 		Portfolio: my.NewPortfolio(repos),
+		Company:   my.NewCompany(repos),
 	}
 }

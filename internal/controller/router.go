@@ -22,6 +22,8 @@ func NewRouter(h *Handler) *Router {
 
 	authR.HandleFunc("/LimitPriceBuy", h.CreateBuy).Methods(http.MethodPost)
 	authR.HandleFunc("/LimitPriceSell", h.CreateSale).Methods(http.MethodPost)
+	authR.HandleFunc("/info", h.GetAccountInfo).Methods(http.MethodGet)
+	authR.HandleFunc("/getCompanies", h.GetCompanies).Methods(http.MethodGet)
 
 	return &Router{Router: router}
 }

@@ -6,11 +6,26 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/database"
+	"github.com/modern-questions-team-13/orange-stock-market/internal/model"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository/repoerrs"
 )
 
 type User struct {
 	pg *database.Postgres
+}
+
+func (u *User) Get(ctx context.Context, id int) (model.User, error) {
+	sql, args, err := u.pg.Sq.Select("*").From("users").Where("id = ?", id).ToSql()
+
+	var user model.User
+
+	err = u.pg.Pool.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Login, &user.Wealth)
+
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
 }
 
 func (u *User) Withdraw(ctx context.Context, id int, wealth int) error {

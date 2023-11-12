@@ -11,6 +11,7 @@ type User interface {
 	Create(ctx context.Context, login string, wealth int) (id int, err error)
 	Withdraw(ctx context.Context, id int, wealth int) error
 	TopUp(ctx context.Context, id int, wealth int) error
+	Get(ctx context.Context, id int) (model.User, error)
 }
 
 type Sale interface {
@@ -25,6 +26,7 @@ type Portfolio interface {
 	AddStock(ctx context.Context, userId, companyId int) error
 	RemoveStock(ctx context.Context, userId, companyId int) error
 	Create(ctx context.Context, userId, companyId int, count int) error
+	Get(ctx context.Context, userId int) ([]model.Asset, error)
 }
 
 type Buy interface {
@@ -44,6 +46,10 @@ type Secret interface {
 	GetUserId(ctx context.Context, token string) (int, error)
 }
 
+type Company interface {
+	GetAll(ctx context.Context) ([]model.Company, error)
+}
+
 type Repositories struct {
 	User
 	Sale
@@ -51,6 +57,7 @@ type Repositories struct {
 	Operation
 	Secret
 	Portfolio
+	Company
 }
 
 func NewRepositories(db *database.Postgres) *Repositories {
@@ -61,5 +68,6 @@ func NewRepositories(db *database.Postgres) *Repositories {
 		Operation: pgx.NewOperation(db),
 		Secret:    pgx.NewAuth(db),
 		Portfolio: pgx.NewPortfolio(db),
+		Company:   pgx.NewCompany(db),
 	}
 }

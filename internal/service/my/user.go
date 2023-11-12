@@ -2,6 +2,7 @@ package my
 
 import (
 	"context"
+	"github.com/modern-questions-team-13/orange-stock-market/internal/model"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository"
 )
 
@@ -9,12 +10,20 @@ type User struct {
 	repos *repository.Repositories
 }
 
-func (u *User) Reserve(ctx context.Context, id int, wealth int) error {
-	return u.repos.User.Withdraw(ctx, id, wealth)
-}
+func (u *User) Get(ctx context.Context, id int) (model.Info, error) {
+	user, err := u.repos.User.Get(ctx, id)
 
-func (u *User) RollbackReserve(ctx context.Context, id int, wealth int) error {
-	return u.repos.User.TopUp(ctx, id, wealth)
+	if err != nil {
+		return model.Info{}, err
+	}
+
+	assets, err := u.repos.Portfolio.Get(ctx, id)
+
+	if err != nil {
+		return model.Info{}, err
+	}
+
+	return model.Info{Account: user, Assets: assets}, nil
 }
 
 func (u *User) Create(ctx context.Context, login string, wealth int) (token string, err error) {

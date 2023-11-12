@@ -22,6 +22,11 @@ func (h *Handler) CreateSale(w http.ResponseWriter, r *http.Request) {
 
 	idInt, err := strconv.Atoi(id)
 
+	if err != nil {
+		NewResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	err = h.serv.Sale.Create(r.Context(), idInt, data.CompanyId, data.Price)
 
 	if err != nil {
@@ -43,6 +48,11 @@ func (h *Handler) CreateBuy(w http.ResponseWriter, r *http.Request) {
 	id := r.Header.Get(userHeader)
 
 	idInt, err := strconv.Atoi(id)
+
+	if err != nil {
+		NewResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	err = h.serv.Buy.Create(r.Context(), idInt, data.CompanyId, data.Price)
 
