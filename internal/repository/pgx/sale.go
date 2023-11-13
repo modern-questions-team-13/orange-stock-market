@@ -15,6 +15,32 @@ type Sale struct {
 	pg *database.Postgres
 }
 
+func (s *Sale) DeleteExpired(ctx context.Context) (id []model.BidInfo, err error) {
+	sql := "delete from sales where now() - created_at > '1 minute' returning user_id, company_id, price"
+
+	rows, err := s.pg.Pool.Query(ctx, sql)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]model.BidInfo, 0, rows.CommandTag().RowsAffected())
+
+	for rows.Next() {
+		var cur model.BidInfo
+
+		err = rows.Scan(&cur.UserId, &cur.CompanyId, &cur.Price)
+
+		if err != nil {
+			return nil, err
+		}
+
+		ids = append(ids, cur)
+	}
+
+	return ids, nil
+}
+
 func (s *Sale) GetAllSales(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error) {
 	sql, args, err := s.pg.Sq.Select("price").
 		From("sales").

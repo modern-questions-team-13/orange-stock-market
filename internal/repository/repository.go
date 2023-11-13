@@ -20,6 +20,7 @@ type Sale interface {
 	Delete(ctx context.Context, id int) (model.Sale, error)
 	GetSales(ctx context.Context, companyId int, maxPrice int, limit uint64) (id []int, err error)
 	GetAllSales(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error)
+	DeleteExpired(ctx context.Context) (id []model.BidInfo, err error)
 }
 
 type Portfolio interface {
@@ -35,6 +36,7 @@ type Buy interface {
 	Get(ctx context.Context, id int) (model.Buy, error)
 	GetBuys(ctx context.Context, companyId int, minPrice int, limit uint64) (id []int, err error)
 	GetAllBuys(ctx context.Context, companyId int, limit, offset uint64) (price []int, err error)
+	DeleteExpired(ctx context.Context) (id []model.BidInfo, err error)
 }
 
 type Operation interface {

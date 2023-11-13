@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	Name  string `yaml:"name" mapstructure:"name"`
 	Port  string `yaml:"port" mapstructure:"http_port"`
 	Url   string `yaml:"url" mapstructure:"pg_url"`
 	Level string `yaml:"level" mapstructure:"log_level"`

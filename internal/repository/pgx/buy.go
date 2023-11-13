@@ -15,6 +15,32 @@ type Buy struct {
 	pg *database.Postgres
 }
 
+func (b *Buy) DeleteExpired(ctx context.Context) (id []model.BidInfo, err error) {
+	sql := "delete from buys where now() - created_at > '1 minute' returning user_id, company_id, price"
+
+	rows, err := b.pg.Pool.Query(ctx, sql)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]model.BidInfo, 0, rows.CommandTag().RowsAffected())
+
+	for rows.Next() {
+		var cur model.BidInfo
+
+		err = rows.Scan(&cur.UserId, &cur.CompanyId, &cur.Price)
+
+		if err != nil {
+			return nil, err
+		}
+
+		ids = append(ids, cur)
+	}
+
+	return ids, nil
+}
+
 func (b *Buy) Get(ctx context.Context, id int) (model.Buy, error) {
 	sql, args, err := b.pg.Sq.Select("user_id", "company_id", "price", "created_at").
 		From("buys").

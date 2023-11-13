@@ -7,6 +7,7 @@ import (
 	"github.com/modern-questions-team-13/orange-stock-market/internal/model"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository/repoerrs"
+	"github.com/opentracing/opentracing-go"
 	"github.com/rs/zerolog/log"
 )
 
@@ -15,6 +16,9 @@ type Sale struct {
 }
 
 func (s *Sale) Create(ctx context.Context, userId, companyId int, price int) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "app: create sale")
+	defer span.Finish()
+
 	err := s.repos.Portfolio.RemoveStock(ctx, userId, companyId)
 
 	if err != nil {

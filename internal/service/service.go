@@ -35,6 +35,10 @@ type Company interface {
 	GetAll(ctx context.Context) ([]model.Company, error)
 }
 
+type Ttl interface {
+	Exec(ctx context.Context)
+}
+
 type Services struct {
 	User
 	Sale
@@ -42,6 +46,7 @@ type Services struct {
 	Auth
 	Portfolio
 	Company
+	Ttl
 }
 
 func NewServices(repos *repository.Repositories) *Services {
@@ -52,5 +57,6 @@ func NewServices(repos *repository.Repositories) *Services {
 		Buy:       my.NewBuy(repos),
 		Portfolio: my.NewPortfolio(repos),
 		Company:   my.NewCompany(repos),
+		Ttl:       my.NewTtl(repos),
 	}
 }

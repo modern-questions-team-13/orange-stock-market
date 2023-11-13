@@ -7,6 +7,7 @@ import (
 	"github.com/modern-questions-team-13/orange-stock-market/internal/model"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository/repoerrs"
+	"github.com/opentracing/opentracing-go"
 	"github.com/rs/zerolog/log"
 )
 
@@ -17,6 +18,9 @@ type Buy struct {
 }
 
 func (b *Buy) Create(ctx context.Context, userId, companyId int, price int) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "app: create buy")
+	defer span.Finish()
+
 	err := b.repos.User.Withdraw(ctx, userId, price)
 
 	if err != nil {

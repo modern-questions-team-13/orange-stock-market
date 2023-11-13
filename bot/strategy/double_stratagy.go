@@ -76,7 +76,9 @@ func (s *Bot) buyAllOnce(waiter chan<- interface{}) {
 	for _, comp := range companies {
 		wg.Add(1)
 		go func(company handlers.Symbol) {
-			for true {
+
+			count := 10
+			for count > 0 {
 				code, err := s.hand.LimitPriceBuy(company.Id, s.priceForBuy.GetPrice())
 				if code == 429 {
 					time.Sleep(s.interval)
@@ -84,7 +86,7 @@ func (s *Bot) buyAllOnce(waiter chan<- interface{}) {
 					fmt.Println(err.Error(), "Company", company.Id, "Code Error", code)
 				} else {
 					fmt.Println(code, company.Ticker, company.Id)
-					break
+					count--
 				}
 			}
 			wg.Done()
@@ -127,8 +129,8 @@ func (s *Bot) sellAllOnce(waiter chan<- interface{}) {
 }
 
 type TwoBotStrategy struct {
-	firstBot  Bot
-	secondBot Bot
+	firstBot  *Bot
+	secondBot *Bot
 	workTime  time.Duration
 }
 
@@ -155,5 +157,13 @@ func (t *TwoBotStrategy) StartBot(cancelFunc context.CancelFunc) {
 			<-bot1
 			<-bot2
 		}
+	}
+}
+
+func NewTwoBotStrategy(cfg TwoBotStrategyConfig) *TwoBotStrategy {
+	return &TwoBotStrategy{
+		firstBot:  NewBot(cfg.Url, cfg.FirstBot),
+		secondBot: NewBot(cfg.Url, cfg.SecondBot),
+		workTime:  cfg.WorkTime,
 	}
 }
