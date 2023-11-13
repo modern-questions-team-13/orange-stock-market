@@ -150,8 +150,8 @@ func (t *TwoBotStrategy) StartBot(cancelFunc context.CancelFunc) {
 		default:
 			bot1 := make(chan interface{})
 			bot2 := make(chan interface{})
-			t.firstBot.buyAllOnce(bot1)
-			t.secondBot.sellAllOnce(bot2)
+			go t.firstBot.buyAllOnce(bot1)
+			go t.secondBot.sellAllOnce(bot2)
 			<-bot1
 			<-bot2
 		}
