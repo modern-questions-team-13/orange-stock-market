@@ -67,9 +67,9 @@ func NewBot(url string, cfg BotConfig) *Bot {
 func (s *Bot) buyAllOnce(waiter chan<- interface{}) {
 	defer close(waiter)
 	companies, err := s.hand.GetCompanies()
-	for err != nil {
-		time.Sleep(s.interval)
-		companies, err = s.hand.GetCompanies()
+	if err != nil {
+		fmt.Println("Problem with connecting", err.Error())
+		return
 	}
 
 	wg := sync.WaitGroup{}
@@ -97,9 +97,9 @@ func (s *Bot) buyAllOnce(waiter chan<- interface{}) {
 func (s *Bot) sellAllOnce(waiter chan<- interface{}) {
 	defer close(waiter)
 	info, err := s.hand.GetInfo()
-	for err != nil {
-		time.Sleep(s.interval)
-		info, err = s.hand.GetInfo()
+	if err != nil {
+		fmt.Println("Problem with connecting", err.Error())
+		return
 	}
 	wg := sync.WaitGroup{}
 	for _, val := range info.Assets {
