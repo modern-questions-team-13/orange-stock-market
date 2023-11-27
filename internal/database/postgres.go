@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/modern-questions-team-13/orange-stock-market/internal/repository/pgx/connector"
 )
 
 type Postgres struct {
-	Pool *pgxpool.Pool
+	Pool connector.Connector
 	Sq   squirrel.StatementBuilderType
 }
 
