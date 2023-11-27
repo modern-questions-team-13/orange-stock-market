@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"github.com/Shopify/sarama"
+	"github.com/modern-questions-team-13/orange-stock-market/config"
+	"github.com/modern-questions-team-13/orange-stock-market/internal/infrastructure/kafka"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/model"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/service/my"
@@ -39,6 +42,10 @@ type Ttl interface {
 	Exec(ctx context.Context)
 }
 
+type KafkaSenderService interface {
+	SendMessage(message kafka.RequestMessage) error
+}
+
 type Services struct {
 	User
 	Sale
@@ -47,16 +54,18 @@ type Services struct {
 	Portfolio
 	Company
 	Ttl
+	KafkaSenderService
 }
 
-func NewServices(repos *repository.Repositories) *Services {
+func NewServices(repos *repository.Repositories, producer sarama.SyncProducer, cfg *config.Config) *Services {
 	return &Services{
-		User:      my.NewUser(repos),
-		Auth:      my.NewAuth(repos),
-		Sale:      my.NewSale(repos),
-		Buy:       my.NewBuy(repos),
-		Portfolio: my.NewPortfolio(repos),
-		Company:   my.NewCompany(repos),
-		Ttl:       my.NewTtl(repos),
+		User:               my.NewUser(repos),
+		Auth:               my.NewAuth(repos),
+		Sale:               my.NewSale(repos),
+		Buy:                my.NewBuy(repos),
+		Portfolio:          my.NewPortfolio(repos),
+		Company:            my.NewCompany(repos),
+		Ttl:                my.NewTtl(repos),
+		KafkaSenderService: my.NewKafkaSender(producer, cfg.RequestTopic),
 	}
 }

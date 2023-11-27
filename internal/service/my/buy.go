@@ -52,12 +52,16 @@ func (b *Buy) GetAllBuysByCompanyId(ctx context.Context, companyId int, limit, o
 }
 
 func (b *Buy) tryBuyImmediately(ctx context.Context, userId, companyId int, price int) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "app: try buy immediately")
+	defer span.Finish()
+
 	sales, err := b.repos.Sale.GetSales(ctx, companyId, price, tryBuyLimit)
 
 	if err != nil {
 		return false, err
 	}
 
+	span, ctx = opentracing.StartSpanFromContext(ctx, "app: range in buy")
 	for _, saleId := range sales {
 		if sale, _err := b.repos.Sale.Delete(ctx, saleId); _err == nil {
 			err = b.makeBuyOperation(ctx, userId, sale, price)
@@ -69,6 +73,7 @@ func (b *Buy) tryBuyImmediately(ctx context.Context, userId, companyId int, pric
 			return true, nil
 		}
 	}
+	span.Finish()
 
 	return true, fmt.Errorf("not finding matching sales")
 }
@@ -86,6 +91,9 @@ func (b *Buy) addStock(ctx context.Context, userId, companyId int) error {
 }
 
 func (b *Buy) makeBuyOperation(ctx context.Context, buyerId int, sale model.Sale, reservedMoney int) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "app: makes buy operation")
+	defer span.Finish()
+
 	err := b.repos.User.TopUp(ctx, sale.UserId, sale.Price)
 
 	if err != nil {

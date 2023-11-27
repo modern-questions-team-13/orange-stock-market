@@ -54,12 +54,15 @@ func (s *Sale) GetAllSales(ctx context.Context, companyId int, limit, offset uin
 }
 
 func (s *Sale) trySellImmediately(ctx context.Context, userId int, companyId int, price int) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "app: try sell immediately")
+	defer span.Finish()
 	buys, err := s.repos.Buy.GetBuys(ctx, companyId, price, tryBuyLimit)
 
 	if err != nil {
 		return false, err
 	}
 
+	span, ctx = opentracing.StartSpanFromContext(ctx, "app: range in sell")
 	for _, buyId := range buys {
 		if buy, _err := s.repos.Buy.Delete(ctx, buyId); _err == nil {
 			err = s.makeSellOperation(ctx, userId, buy, price)
@@ -71,11 +74,14 @@ func (s *Sale) trySellImmediately(ctx context.Context, userId int, companyId int
 			return true, nil
 		}
 	}
+	span.Finish()
 
 	return true, fmt.Errorf("not finding matching sales")
 }
 
 func (s *Sale) makeSellOperation(ctx context.Context, sellerId int, buy model.Buy, price int) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "app: makes sell operation")
+	defer span.Finish()
 
 	if buy.Price > price {
 		err := s.repos.User.TopUp(ctx, buy.UserId, buy.Price-price)

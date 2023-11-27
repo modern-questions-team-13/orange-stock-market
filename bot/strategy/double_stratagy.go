@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/modern-questions-team-13/orange-stock-market/bot/handlers"
+	"io"
 	"math/rand"
 	"sync"
 	"time"
@@ -79,13 +80,15 @@ func (s *Bot) buyAllOnce(waiter chan<- interface{}) {
 
 			count := 10
 			for count > 0 {
-				code, err := s.hand.LimitPriceBuy(company.Id, s.priceForBuy.GetPrice())
+				code, body, err := s.hand.LimitPriceBuy(company.Id, s.priceForBuy.GetPrice())
 				if code == 429 {
 					time.Sleep(s.interval)
 				} else if err != nil {
 					fmt.Println(err.Error(), "Company", company.Id, "Code Error", code)
 				} else {
-					fmt.Println(code, company.Ticker, company.Id)
+
+					res, _ := io.ReadAll(body)
+					fmt.Println(code, string(res), company.Ticker, company.Id)
 					count--
 				}
 			}
@@ -109,10 +112,11 @@ func (s *Bot) sellAllOnce(waiter chan<- interface{}) {
 		go func(ass handlers.Asset) {
 			for i := int64(0); i < ass.Quantity; i++ {
 				for true {
-					code, err := s.hand.LimitPriceSell(ass.Id, s.priceForSell.GetPrice())
+					code, body, err := s.hand.LimitPriceSell(ass.Id, s.priceForSell.GetPrice())
 					if code != 200 || err != nil {
 						if err != nil {
-							fmt.Println("Code", code, "Error", err)
+							res, _ := io.ReadAll(body)
+							fmt.Println("Code", code, "Error", err, "Msg", res)
 						}
 						time.Sleep(s.interval)
 					} else {
