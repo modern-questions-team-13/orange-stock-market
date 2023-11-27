@@ -1,0 +1,2 @@
+SELECT id FROM buys 
+WHERE company_id=$1 and price >= $2 LIMIT 1

@@ -7,6 +7,8 @@ import (
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository/pgx"
 )
 
+//go:generate mockgen -source=repository.go  -destination=mocks\mock_repository.go
+
 type User interface {
 	Create(ctx context.Context, login string, wealth int) (id int, err error)
 	Withdraw(ctx context.Context, id int, wealth int) error
