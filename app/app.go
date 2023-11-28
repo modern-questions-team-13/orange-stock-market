@@ -2,9 +2,11 @@ package app
 
 import (
 	"context"
+	"github.com/gorilla/handlers"
 	"github.com/modern-questions-team-13/orange-stock-market/config"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/controller"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/database"
+	"github.com/modern-questions-team-13/orange-stock-market/internal/infrastructure/kafka"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/repository"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/service"
 	"github.com/modern-questions-team-13/orange-stock-market/internal/tracer"
@@ -50,9 +52,17 @@ func Run() {
 	log.Info().Msg("initiating repositories...")
 	repos := repository.NewRepositories(pg)
 
+	// kafka
+	producer, err := kafka.NewProducer(cfg.Brokers, kafka.NewProducerConfig())
+	if err != nil {
+		log.Fatal().Err(err).Msg("kafka sender")
+	}
+
+	defer producer.Close()
+
 	log.Info().Msg("initiating services...")
 	// service
-	serv := service.NewServices(repos)
+	serv := service.NewServices(repos, producer, cfg)
 
 	//ttl serv
 	serv.Ttl.Exec(context.Background())
@@ -66,6 +76,9 @@ func Run() {
 
 	router := controller.NewRouter(h)
 
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	originsOk := handlers.AllowedOrigins([]string{"http://localhost:63344"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 	log.Info().Str("port", cfg.Port).Msg("starting listen server")
-	oslog.Fatal(http.ListenAndServe(net.JoinHostPort("", cfg.Port), router.Router))
+	oslog.Fatal(http.ListenAndServe(net.JoinHostPort("", cfg.Port), handlers.CORS(originsOk, headersOk, methodsOk)(router.Router)))
 }

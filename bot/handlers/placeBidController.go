@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 )
 
@@ -43,17 +44,17 @@ func (b *botHandler) Cancel(bidId int64) (int, error) {
 
 }
 
-func (b *botHandler) LimitPriceSell(symbolId int64, price int64) (int, error) {
+func (b *botHandler) LimitPriceSell(symbolId int64, price int64) (int, io.ReadCloser, error) {
 	reqBody, err := json.Marshal(reqLimitPrice{
 		SymbolId: symbolId,
 		Price:    price,
 	})
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 	req, err := http.NewRequest("POST", b.url+"/LimitPriceSell", bytes.NewBuffer(reqBody))
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 	req.Header.Add("Token", b.token)
 	req.Header.Set("Content-Type", "application/json")
@@ -61,23 +62,23 @@ func (b *botHandler) LimitPriceSell(symbolId int64, price int64) (int, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 
-	return resp.StatusCode, err
+	return resp.StatusCode, resp.Body, err
 }
 
-func (b *botHandler) LimitPriceBuy(symbolId int64, price int64) (int, error) {
+func (b *botHandler) LimitPriceBuy(symbolId int64, price int64) (int, io.ReadCloser, error) {
 	reqBody, err := json.Marshal(reqLimitPrice{
 		SymbolId: symbolId,
 		Price:    price,
 	})
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 	req, err := http.NewRequest("POST", b.url+"/LimitPriceBuy", bytes.NewBuffer(reqBody))
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 	req.Header.Add("Token", b.token)
 	req.Header.Set("Content-Type", "application/json")
@@ -85,9 +86,9 @@ func (b *botHandler) LimitPriceBuy(symbolId int64, price int64) (int, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
-	return resp.StatusCode, nil
+	return resp.StatusCode, resp.Body, nil
 
 }
 

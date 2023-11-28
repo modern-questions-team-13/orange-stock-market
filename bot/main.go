@@ -15,14 +15,14 @@ func main() {
 			Token:        "ba098c25f5a8321e9940447f551b5126f244e6ed",
 			PriceForBuy:  strategy.NewRandomPrice(1, 100),
 			PriceForSell: strategy.NewRandomPrice(1, 100),
-			Interval:     time.Millisecond * 2,
+			Interval:     time.Millisecond * 10,
 		},
 		// id = 4
 		SecondBot: strategy.BotConfig{
 			Token:        "fb7a973a860fee4183f0a23a4405ab3f2e098a76",
 			PriceForBuy:  strategy.NewRandomPrice(1, 100),
 			PriceForSell: strategy.NewRandomPrice(1, 100),
-			Interval:     time.Millisecond * 2,
+			Interval:     time.Millisecond * 3,
 		},
 		WorkTime: time.Second * 10,
 	}

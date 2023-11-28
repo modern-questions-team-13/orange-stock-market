@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"github.com/modern-questions-team-13/orange-stock-market/internal/infrastructure/kafka"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type PriceSellInput struct {
@@ -24,6 +26,18 @@ func (h *Handler) CreateSale(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		NewResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.serv.KafkaSenderService.SendMessage(kafka.RequestMessage{
+		Type:      1,
+		CompanyId: data.CompanyId,
+		Price:     data.Price,
+		DateTime:  time.Now().Format(time.RFC3339),
+	})
+
+	if err != nil {
+		NewResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -51,6 +65,18 @@ func (h *Handler) CreateBuy(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		NewResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.serv.KafkaSenderService.SendMessage(kafka.RequestMessage{
+		Type:      0,
+		CompanyId: data.CompanyId,
+		Price:     data.Price,
+		DateTime:  time.Now().Format(time.RFC3339),
+	})
+
+	if err != nil {
+		NewResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

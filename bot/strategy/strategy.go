@@ -66,7 +66,7 @@ func (s *SimpleStrategy) buyAllOnce() {
 		wg.Add(1)
 		go func(company handlers.Symbol) {
 			for true {
-				code, err := s.hand.LimitPriceBuy(company.Id, s.priceForBuy)
+				code, _, err := s.hand.LimitPriceBuy(company.Id, s.priceForBuy)
 				if code == 429 {
 					time.Sleep(s.interval)
 				} else if err != nil {
@@ -95,7 +95,7 @@ func (s *SimpleStrategy) sellAllOnce() {
 		go func(ass handlers.Asset) {
 			for i := int64(0); i < ass.Quantity; i++ {
 				for true {
-					code, err := s.hand.LimitPriceSell(ass.Id, s.priceForSell)
+					code, _, err := s.hand.LimitPriceSell(ass.Id, s.priceForSell)
 					if code != 200 || err != nil {
 						if err != nil {
 							fmt.Println("Code", code, "Error", err)
